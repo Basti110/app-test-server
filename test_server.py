@@ -1,3 +1,4 @@
+import time
 from twisted.internet import reactor
 from server import ServerController, ServerSocket, ResponseAnswer
 
@@ -6,7 +7,7 @@ class TestServer:
         self._exercise_count = {}
         self._client_callbacks = {}
 
-        server_controller = ServerController("ws://127.0.0.1:3030")
+        server_controller = ServerController("ws://127.0.0.1:3030", self.client_callback)
         server_controller.register_callback(1, self.login_station)
         server_controller.register_callback(2, self.logout_station)
         server_controller.register_callback(3, self.start_exercise)
@@ -21,15 +22,15 @@ class TestServer:
         self._client_callbacks[client_id] = callback
 
     def login_station(self, user_id, payload):
-        print("login into station. Payload: ", payload)
+        print("[LOGIN STATION] Payload: ", payload)
         return ResponseAnswer(501, 1)
 
     def logout_station(self, user_id, payload):
-        print("logout from station. Payload:", payload)
+        print("[LOGOUT STATION] Payload:", payload)
         return ResponseAnswer(502, 1)
 
     def start_exercise(self, user_id, payload):
-        print("start exercise. Payload:", payload)
+        print("[START EXERCISE] Payload:", payload)
         self._client_callbacks[user_id](response_code=503, satus_code=1)
 
         for i in range(8): 
@@ -39,14 +40,14 @@ class TestServer:
         return ResponseAnswer(request_requiered=False)
 
     def stop_exercise(self, user_id, payload):
-        print("stop exercise. Payload:", payload)
+        print("[STOP EXERCISE] Payload:", payload)
         return ResponseAnswer(504, 1)
 
     def weight_detection(self, user_id, payload):
-        print("Start Weight Detection. Payload:", payload)
+        print("[WEIGHT DETECTION] Payload:", payload)
         return ResponseAnswer(507, 1, {"weight" : 500.0, "probability" : 0.5})
 
-    def send_repitition(self, user_id : str, repetition : int, exercise : str, set_id : int):
+    def send_repitition(self, user_id : str, repetition : int, exercise, set_id : int):
         payload = {
             "repetitions": repetition,
             "exercise": exercise,
