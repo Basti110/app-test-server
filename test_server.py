@@ -6,8 +6,18 @@ class TestServer:
         self._exercise_count = {}
         self._client_callbacks = {}
 
+        server_controller = ServerController("ws://127.0.0.1:3030")
+        server_controller.register_callback(1, self.login_station)
+        server_controller.register_callback(2, self.logout_station)
+        server_controller.register_callback(3, self.start_exercise)
+        server_controller.register_callback(4, self.stop_exercise)
+        server_controller.register_callback(7, self.weight_detection)
+        server_controller.protocol = ServerSocket
+        reactor.listenTCP(3030, server_controller)
+        reactor.run()
 
     def client_callback(self, client_id, callback):
+        print("Register Calback")
         self._client_callbacks[client_id] = callback
 
     def login_station(self, user_id, payload):
@@ -45,12 +55,4 @@ class TestServer:
         self._client_callbacks[user_id](response_code=509, satus_code=1, payload=payload)
 
 if __name__ == '__main__':
-    server_controller = ServerController("ws://127.0.0.1:3030")
-    server_controller.register_callback(1, login_station)
-    server_controller.register_callback(2, logout_station)
-    server_controller.register_callback(3, start_exercise)
-    server_controller.register_callback(4, stop_exercise)
-    server_controller.register_callback(7, weight_detection)
-    server_controller.protocol = ServerSocket
-    reactor.listenTCP(3030, server_controller)
-    reactor.run()
+    test_server = TestServer()

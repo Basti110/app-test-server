@@ -30,7 +30,7 @@ class ServerSocket(WebSocketServerProtocol):
             self.factory._register_client_callback(self._id, self.send_msg_ts)
 
     def onOpen(self):
-        print("WebSocket connection open.")
+        print("### New Connection ###")
         response = copy.deepcopy(RESPONSE_DICT)
         response["id"] = self._id
         response["response"] = 500
@@ -51,16 +51,7 @@ class ServerSocket(WebSocketServerProtocol):
         if not result.request_requiered:
             return
             
-        response = copy.deepcopy(RESPONSE_DICT)
-        response["id"] = self._id
-        response["response"] = result.response_code
-        response["status_code"] = result.status_code
-        response["payload"] = result.payload
-
-        response = str(json.dumps(response))
-        response = response.encode('utf8')
-        print(response)
-        reactor.callFromThread(self.sendMessage, response, False)
+        self.send_msg_ts(result.response_code, result.status_code, result.payload)
 
     def onMessage(self, payload, isBinary):
         if isBinary:
@@ -74,6 +65,8 @@ class ServerSocket(WebSocketServerProtocol):
                 self.send_error("Wrong JSON Format", 8)
                 return
 
+        print() #New line 
+        
         #print("Received Data ", data)
         #print("Test:", type(data))
         #user_id = data.get("id")
@@ -126,7 +119,7 @@ class ServerSocket(WebSocketServerProtocol):
         response["status_code"] = satus_code
         response["payload"] = {"error" : error}
         response = str(json.dumps(response))
-        print(response)
+        print("[ERROR]", response)
         self.sendMessage(response.encode('utf8'), isBinary=False)
 
     def send_msg_ts(self, response_code=508, satus_code=2, payload=dict({})):
@@ -137,6 +130,7 @@ class ServerSocket(WebSocketServerProtocol):
         response["payload"] = payload
         response = str(json.dumps(response))
         response = response.encode('utf8')
+        print("[RESPONSE]", response)
         reactor.callFromThread(self.sendMessage, response, False)
 
 class ServerController(WebSocketServerFactory):
